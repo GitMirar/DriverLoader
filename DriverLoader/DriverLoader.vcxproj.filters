@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="DriverLoader.cpp" />
+    <ClCompile Include="format\src\format.cc">
+      <Filter>Format Library\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="format\src\os.cc">
+      <Filter>Format Library\Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Format Library">
+      <UniqueIdentifier>{0b148561-caa1-407b-a8e9-288d0c493788}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Format Library\Headers">
+      <UniqueIdentifier>{c510ebc5-6b0c-4cee-930f-c2725eae1dca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Format Library\Source">
+      <UniqueIdentifier>{d20390dd-45c4-4d07-bf18-6c0409c67464}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows Registry Library">
+      <UniqueIdentifier>{3578782b-d1ce-41c6-9788-37886336fd54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Windows Registry Library\Headers">
+      <UniqueIdentifier>{8ebef7e8-ac26-47f2-a717-e13c640dfa28}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="format\include\fmt\chrono.h">
+      <Filter>Format Library\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="format\include\fmt\color.h">
+      <Filter>Format Library\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="format\include\fmt\compile.h">
+      <Filter>Format Library\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="format\include\fmt\core.h">
+      <Filter>Format Library\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="format\include\fmt\format.h">
+      <Filter>Format Library\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="format\include\fmt\format-inl.h">
+      <Filter>Format Library\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="format\include\fmt\locale.h">
+      <Filter>Format Library\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="format\include\fmt\os.h">
+      <Filter>Format Library\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="format\include\fmt\ostream.h">
+      <Filter>Format Library\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="format\include\fmt\posix.h">
+      <Filter>Format Library\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="format\include\fmt\printf.h">
+      <Filter>Format Library\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="format\include\fmt\ranges.h">
+      <Filter>Format Library\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="winreg\winreg.hpp">
+      <Filter>Windows Registry Library\Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitignore" />
+  </ItemGroup>
+</Project>

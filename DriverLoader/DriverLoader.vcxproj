@@ -75,12 +75,14 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir)\cxxopt;$(ProjectDir)\winreg;$(ProjectDir)\format\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir)\cxxopt;$(ProjectDir)\winreg;$(ProjectDir)\format\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -157,6 +159,26 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DriverLoader.cpp" />
+    <ClCompile Include="format\src\format.cc" />
+    <ClCompile Include="format\src\os.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="format\include\fmt\chrono.h" />
+    <ClInclude Include="format\include\fmt\color.h" />
+    <ClInclude Include="format\include\fmt\compile.h" />
+    <ClInclude Include="format\include\fmt\core.h" />
+    <ClInclude Include="format\include\fmt\format-inl.h" />
+    <ClInclude Include="format\include\fmt\format.h" />
+    <ClInclude Include="format\include\fmt\locale.h" />
+    <ClInclude Include="format\include\fmt\os.h" />
+    <ClInclude Include="format\include\fmt\ostream.h" />
+    <ClInclude Include="format\include\fmt\posix.h" />
+    <ClInclude Include="format\include\fmt\printf.h" />
+    <ClInclude Include="format\include\fmt\ranges.h" />
+    <ClInclude Include="winreg\winreg.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitignore" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
