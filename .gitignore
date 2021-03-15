@@ -1,0 +1,12 @@
+.vs/
+x64
+
+*.ilk
+*.pdb
+*.exe
+*.obj
+*.ipch
+*.idb
+
+Browse.VC.*
+*.vcxproj.user
