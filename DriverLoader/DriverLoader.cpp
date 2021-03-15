@@ -15,52 +15,9 @@
 namespace fs = std::filesystem;
 
 
-class NtUnicodeString {
-public:
-	explicit NtUnicodeString(size_t MaxLength) : _Str(nullptr) {
-		if (MaxLength > UINT16_MAX) {
-			throw std::runtime_error(fmt::format("The maximum length of UNICODE_STRING is {}", UINT16_MAX));
-		}
-
-		_Str = (PUNICODE_STRING)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(UNICODE_STRING) + MaxLength*sizeof(WCHAR));
-		if (!_Str) {
-			throw std::bad_alloc();
-		}
-
-		_Str->Buffer = PWSTR(PUCHAR(_Str) + sizeof(UNICODE_STRING));
-
-		_Str->Length = (USHORT)MaxLength;
-		_Str->MaximumLength = (USHORT)MaxLength;
-	}
-
-	explicit NtUnicodeString(const std::wstring& WideString) : NtUnicodeString(WideString.size()) {
-		// UNICODE_STRING does not need to be NULL-terminated
-		CopyMemory(_Str->Buffer, WideString.data(), _Str->Length*sizeof(WCHAR));
-	}
-
-	~NtUnicodeString() {
-		if (_Str) {
-			HeapFree(GetProcessHeap(), 0, _Str);
-			_Str = nullptr;
-		}
-	}
-
-	operator PUNICODE_STRING() const {
-		return _Str;
-	}
-
-	operator std::wstring() const {
-		return std::wstring(_Str->Buffer, _Str->Length);
-	}
-
-private:
-	PUNICODE_STRING	_Str;
-};
-
-
 class NativeServices {
 public:
-	NativeServices ()
+	NativeServices()
 	{
 		const auto hNtdll = GetModuleHandleW(L"Ntdll.dll");
 		if (hNtdll == 0) {
@@ -76,45 +33,26 @@ public:
 		if (_NtUnloadDriver == nullptr) {
 			throw std::runtime_error("Could not obtain address of ntdll!NtUnloadDriver");
 		}
-
-		_RtlDosPathNameToNtPathName_U_WithStatus = (RTL_DOS_TO_NT_NAME_PFN)GetProcAddress(hNtdll, "RtlDosPathNameToNtPathName_U_WithStatus");
-		if (_RtlDosPathNameToNtPathName_U_WithStatus == nullptr) {
-			throw std::runtime_error("Could not obtain address of ntdll!RtlDosPathNameToNtPathName_U_WithStatus");
-		}
 	}
 
 	void LoadDriver(const std::wstring& DriverServiceName)
 	{
-		const auto driverRegPath = NtUnicodeString(
-			std::wstring(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\" + 
-			DriverServiceName));
+		const auto		driverRegPath = std::wstring(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\") + DriverServiceName;
+		UNICODE_STRING	uDriverRegPath;
 
-		ThrowIfNotSuccess(_NtLoadDriver(driverRegPath));
+		RtlInitUnicodeString(&uDriverRegPath, driverRegPath.c_str());
+
+		ThrowIfNotSuccess(_NtLoadDriver(&uDriverRegPath));
 	}
 
 	void UnloadDriver(const std::wstring& DriverServiceName)
 	{
-		const auto driverRegPath = NtUnicodeString(
-			std::wstring(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\" +
-				DriverServiceName));
+		const auto		driverRegPath = std::wstring(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\") + DriverServiceName;
+		UNICODE_STRING	uDriverRegPath;
 
-		ThrowIfNotSuccess(_NtUnloadDriver(driverRegPath));
-	}
+		RtlInitUnicodeString(&uDriverRegPath, driverRegPath.c_str());
 
-	std::wstring RtlDosPathNameToNtPathName(const std::wstring& DosPath)
-	{
-		NtUnicodeString     ntName(MAX_PATH);
-		PWSTR               partName;
-		RTL_RELATIVE_NAME_U relativeName;
-		
-		ThrowIfNotSuccess(
-			_RtlDosPathNameToNtPathName_U_WithStatus(
-				DosPath.c_str(),
-				ntName,
-				(PCWSTR*)&partName,
-				&relativeName));
-
-		return ntName;
+		ThrowIfNotSuccess(_NtUnloadDriver(&uDriverRegPath));
 	}
 
 private:
@@ -126,27 +64,11 @@ private:
 		}
 	}
 
-	typedef struct _RTLP_CURDIR_REF	{
-		LONG RefCount;
-		HANDLE Handle;
-	} RTLP_CURDIR_REF, *PRTLP_CURDIR_REF;
-
-	typedef struct RTL_RELATIVE_NAME_U {
-		UNICODE_STRING RelativeName;
-		HANDLE ContainingDirectory;
-		PRTLP_CURDIR_REF CurDirRef;
-	} RTL_RELATIVE_NAME_U, *PRTL_RELATIVE_NAME_U;
-
 	typedef NTSTATUS (*NT_LOAD_DRIVER_PFN)(_In_ PUNICODE_STRING DriverServiceName);
 	typedef NTSTATUS (*NT_UNLOAD_DRIVER_PFN)(_In_ PUNICODE_STRING DriverServiceName);
-	typedef NTSTATUS (*RTL_DOS_TO_NT_NAME_PFN)(_In_ PCWSTR DosName,
-		_Out_ PUNICODE_STRING NtName,
-		_Out_ PCWSTR* PartName,
-		_Out_ PRTL_RELATIVE_NAME_U RelativeName);
 
 	NT_LOAD_DRIVER_PFN		_NtLoadDriver;
 	NT_UNLOAD_DRIVER_PFN	_NtUnloadDriver;
-	RTL_DOS_TO_NT_NAME_PFN	_RtlDosPathNameToNtPathName_U_WithStatus;
 };
 
 
@@ -200,7 +122,8 @@ private:
 		serviceKey.SetDwordValue(L"Type", _ServiceType);
 		serviceKey.SetDwordValue(L"Start", _ServiceStart);
 		serviceKey.SetDwordValue(L"ErrorControl", _ServiceErrorControl);
-		serviceKey.SetExpandStringValue(L"ImagePath", _NativeServices.RtlDosPathNameToNtPathName(DriverPath));
+		serviceKey.SetStringValue(L"DisplayName", ServiceName);
+		serviceKey.SetExpandStringValue(L"ImagePath", std::wstring(L"\\??\\") + fs::absolute(DriverPath).wstring());
 	}
 
 	void DeleteServiceEntry(const std::wstring& ServiceName)
@@ -214,9 +137,9 @@ private:
 		serviceKey.DeleteTree(fmt::format(L"SYSTEM\\CurrentControlSet\\Services\\{}", ServiceName));
 	}
 
-	static constexpr DWORD _ServiceType = 1;
-	static constexpr DWORD _ServiceStart = 3;
-	static constexpr DWORD _ServiceErrorControl = 1;
+	static constexpr DWORD _ServiceType = 0;
+	static constexpr DWORD _ServiceStart = 0;
+	static constexpr DWORD _ServiceErrorControl = 0;
 
 	NativeServices _NativeServices;
 };
