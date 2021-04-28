@@ -11,6 +11,10 @@
 
 #pragma comment(lib, "ntdll.lib")
 
+// 
+// Uninstall-WindowsFeature -Name Windows-Defender
+// netsh advfirewall set allprofiles state off
+//
 
 namespace fs = std::filesystem;
 
@@ -98,7 +102,13 @@ public:
 
 	void Unload(const std::wstring& ServiceName)
 	{
-		_NativeServices.UnloadDriver(ServiceName);
+		try {
+			_NativeServices.UnloadDriver(ServiceName);
+		}
+		catch (const std::exception& e) {
+			fmt::print(fmt::format("Error when unloading: {0}\n", e.what()));
+		}
+
 		DeleteServiceEntry(ServiceName);
 	}
 
@@ -137,9 +147,9 @@ private:
 		serviceKey.DeleteTree(fmt::format(L"SYSTEM\\CurrentControlSet\\Services\\{}", ServiceName));
 	}
 
-	static constexpr DWORD _ServiceType = 0;
-	static constexpr DWORD _ServiceStart = 0;
-	static constexpr DWORD _ServiceErrorControl = 0;
+	static constexpr DWORD _ServiceType = 0; // SERVICE_DRIVER;
+	static constexpr DWORD _ServiceStart = SERVICE_BOOT_START;
+	static constexpr DWORD _ServiceErrorControl = SERVICE_ERROR_IGNORE;
 
 	NativeServices _NativeServices;
 };
